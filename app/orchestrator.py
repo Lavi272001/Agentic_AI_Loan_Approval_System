@@ -3,6 +3,7 @@
 from langgraph.graph import StateGraph, END
 from app.state import LoanApplicationState
 from app.logger import app_logger
+from app.counterfactual_analyzer import CounterfactualAnalyzer
 from langchain_anthropic import ChatAnthropic
 import os
 from datetime import datetime
@@ -113,6 +114,10 @@ def loan_decision_node(state: LoanApplicationState):
             "explanation": f"Applicant credit score {score} with DTI {dti:.2f}. Decision: {decision}"
         }
 
+        analyzer = CounterfactualAnalyzer()
+        counterfactuals = analyzer.analyze(decision_out, state)
+        decision_out["counterfactuals"] = counterfactuals.get("counterfactuals", [])
+
         app_logger.log_decision(state["applicant_id"], decision_out, risk_score)
 
         return {"final_decision": decision_out}
@@ -193,19 +198,68 @@ def _extract_factors(state: LoanApplicationState, decision: str) -> list:
 
     return factors if factors else [f"Standard {decision}"]
 
+def route_based_on_risk(state: LoanApplicationState) -> str:
+    """Route to manual review if high risk indicators detected"""
+    dti = state.get("financial_risk_data", {}).get("debt_to_income_ratio", 0)
+    credit_score = state.get("credit_score", 0)
+
+    if dti > 0.50:
+        return "manual_review"
+
+    if 600 <= credit_score < 700:
+        return "manual_review"
+
+    return "loan_decision"
+
+def route_after_decision(state: LoanApplicationState) -> str:
+    """Route based on decision classification"""
+    classification = state.get("final_decision", {}).get("classification")
+
+    if classification == "Requires Manual Review":
+        return "manual_review"
+
+    return "compliance"
+
+def manual_review_node(state: LoanApplicationState):
+    """Manual review escalation node"""
+    app_logger.log_event(
+        "MANUAL_REVIEW_ESCALATION",
+        applicant_id=state["applicant_id"]
+    )
+
+    return {
+        "final_decision": {
+            "classification": "Requires Manual Review",
+            "risk_score": 50,
+            "confidence_level": "Medium",
+            "key_decision_factors": ["Escalated to manual review"],
+            "explanation": "Application requires manual review due to risk factors."
+        }
+    }
+
 # Build the Graph
 workflow = StateGraph(LoanApplicationState)
 
 workflow.add_node("applicant_profile", applicant_profile_node)
 workflow.add_node("financial_risk", financial_risk_node)
+workflow.add_node("manual_review", manual_review_node)
 workflow.add_node("loan_decision", loan_decision_node)
 workflow.add_node("compliance", compliance_node)
 
-# Step-by-step workflow pipeline
+# Set entry point
 workflow.set_entry_point("applicant_profile")
+
+# Add edges with conditional routing
 workflow.add_edge("applicant_profile", "financial_risk")
-workflow.add_edge("financial_risk", "loan_decision")
-workflow.add_edge("loan_decision", "compliance")
+workflow.add_conditional_edges("financial_risk", route_based_on_risk, {
+    "manual_review": "manual_review",
+    "loan_decision": "loan_decision"
+})
+workflow.add_conditional_edges("loan_decision", route_after_decision, {
+    "manual_review": "manual_review",
+    "compliance": "compliance"
+})
+workflow.add_edge("manual_review", "compliance")
 workflow.add_edge("compliance", END)
 
 # Compile Graph
