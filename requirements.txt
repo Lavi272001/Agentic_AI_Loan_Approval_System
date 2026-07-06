@@ -8,3 +8,4 @@ mcp[cli]
 fastmcp
 pydantic
 python-dotenv
+mysql-connector-python
