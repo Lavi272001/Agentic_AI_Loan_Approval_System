@@ -1,0 +1,10 @@
+# Project dependencies
+fastapi
+uvicorn
+streamlit
+langgraph
+langchain-anthropic
+mcp[cli]
+fastmcp
+pydantic
+python-dotenv
