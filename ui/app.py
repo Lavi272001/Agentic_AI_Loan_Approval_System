@@ -1,10 +1,11 @@
-# Streamlit Loan Approval UI - Enhanced with Beautiful Styling
+# Streamlit Loan Approval UI - Enhanced with Beautiful Styling & Celebrations
 # Advanced user interface for the Agentic AI Loan Approval System
 
 import streamlit as st
 import requests
 import json
 from datetime import datetime
+import time
 
 # Page Configuration
 st.set_page_config(
@@ -275,17 +276,39 @@ if evaluate_button:
                 progress_bar.progress(100)
                 status_text.success("✅ Analysis Complete!")
 
-                # Main Decision Card
+                # Main Decision Card with Celebrations
                 st.markdown("---")
                 if decision == "Approved":
+                    # Celebration effects for approved
+                    st.balloons()  # 🎈 Balloons animation
+
+                    # Celebration HTML with sparkles
                     st.markdown(f"""
                     <div style="background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
-                                padding: 30px; border-radius: 12px; text-align: center;
-                                border: 2px solid #00AA44; box-shadow: 0 4px 12px rgba(0,170,68,0.2);">
-                        <h1 style="color: #00AA44; margin: 0;">✅ APPROVED</h1>
-                        <p style="color: #333; font-size: 18px; margin: 10px 0;">Application meets all approval criteria</p>
+                                padding: 40px; border-radius: 12px; text-align: center;
+                                border: 3px solid #00AA44; box-shadow: 0 8px 20px rgba(0,170,68,0.4);
+                                animation: pulse 1s infinite;">
+                        <div style="font-size: 60px; margin-bottom: 20px;">
+                            🎉 🎈 ✨ 🎊 ✨ 🎈 🎉
+                        </div>
+                        <h1 style="color: #00AA44; margin: 10px 0; font-size: 48px;">✅ APPROVED!</h1>
+                        <p style="color: #333; font-size: 20px; margin: 15px 0; font-weight: bold;">
+                            🎊 Congratulations! Your loan has been approved! 🎊
+                        </p>
+                        <p style="color: #555; font-size: 16px; margin: 10px 0;">
+                            Application meets all approval criteria • Ready for processing
+                        </p>
+                        <div style="font-size: 40px; margin-top: 20px;">
+                            🌟 💚 🎁 💚 🌟
+                        </div>
                     </div>
                     """, unsafe_allow_html=True)
+
+                    # Add celebration message
+                    celebration_col1, celebration_col2, celebration_col3 = st.columns(3)
+                    with celebration_col2:
+                        st.success("🎉 Your loan application has been APPROVED! 🎉")
+
                 elif decision == "Requires Manual Review":
                     st.markdown(f"""
                     <div style="background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
@@ -295,15 +318,31 @@ if evaluate_button:
                         <p style="color: #333; font-size: 18px; margin: 10px 0;">Application requires additional review</p>
                     </div>
                     """, unsafe_allow_html=True)
-                else:
+
+                else:  # Declined
+                    # Sad emojis for declined
                     st.markdown(f"""
                     <div style="background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
-                                padding: 30px; border-radius: 12px; text-align: center;
-                                border: 2px solid #DD3333; box-shadow: 0 4px 12px rgba(221,51,51,0.2);">
-                        <h1 style="color: #DD3333; margin: 0;">❌ DECLINED</h1>
-                        <p style="color: #333; font-size: 18px; margin: 10px 0;">Application does not meet approval criteria</p>
+                                padding: 40px; border-radius: 12px; text-align: center;
+                                border: 3px solid #DD3333; box-shadow: 0 8px 20px rgba(221,51,51,0.4);">
+                        <div style="font-size: 60px; margin-bottom: 20px;">
+                            😔 😞 💔 😞 😔
+                        </div>
+                        <h1 style="color: #DD3333; margin: 10px 0; font-size: 48px;">❌ APPLICATION DECLINED</h1>
+                        <p style="color: #333; font-size: 20px; margin: 15px 0; font-weight: bold;">
+                            😢 Unfortunately, your application does not meet our criteria 😢
+                        </p>
+                        <p style="color: #555; font-size: 16px; margin: 10px 0;">
+                            Application does not meet approval criteria • Please review feedback
+                        </p>
+                        <div style="font-size: 40px; margin-top: 20px;">
+                            😞 💔 😞
+                        </div>
                     </div>
                     """, unsafe_allow_html=True)
+
+                    # Add sad message
+                    st.error("😔 Unfortunately, your application has been DECLINED. Please review the details below. 😔")
 
                 st.markdown("---")
 
